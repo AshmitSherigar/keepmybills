@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 export default function connectDB(): void {
   mongoose
-    .connect('mongodb://localhost:27017/keepmybills')
+    .connect(process.env.MONGO_URI as string)
     .then(() => {
       console.log('Database[MongoDB] Successfully Connnected');
     })
