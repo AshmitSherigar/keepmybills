@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
-import Sidebar from '../../components/Sidebar';
+import PageTitle from '../components/ui/Helmets/PageTitle';
+import Sidebar from '../components/Sidebar';
 import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
@@ -44,9 +44,7 @@ const Home = () => {
 
   return (
     <React.Fragment>
-      <Helmet>
-        <title>Home - KeepMyBills</title>
-      </Helmet>
+      <PageTitle title="Home - KeepMyBills" />
       <Sidebar user={user} />
 
       <h1>Home</h1>
