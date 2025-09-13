@@ -7,12 +7,15 @@ const JWT_SECRET = process.env.JWT_SECRET as string;
 
 export function registerUser(req: Request<{}, {}, IUser>, res: Response): void {
   const { username, email, password } = req.body;
-
+  if (!username || !email || !password) {
+    res.status(400).json({ message: 'All fields are required' });
+    return;
+  }
   // check if user already exists
   User.findOne({ $or: [{ email }, { username }] })
     .then((existingUser) => {
       if (existingUser) {
-        res.status(400).json({ message: 'User already exists!' });
+        res.status(400).json({ message: 'Email already used!' });
         return;
       }
 
@@ -22,12 +25,17 @@ export function registerUser(req: Request<{}, {}, IUser>, res: Response): void {
         .then((hash) => {
           User.create({ username, email, password: hash })
             .then((user) => {
-              const payload = { id: user._id };
+              const payload = { id: user._id, username, email };
               const token = jwt.sign(payload, JWT_SECRET);
-              res.cookie('token', token, { httpOnly: true });
-              res
-                .status(201)
-                .json({ message: 'User registered successfully', user });
+              res.status(201).json({
+                message: 'User registered successfully',
+                token,
+                user: {
+                  id: user._id,
+                  username: user.username,
+                  email: user.email,
+                },
+              });
             })
             .catch((err) => {
               if (err.code === 11000) {
@@ -60,7 +68,7 @@ export function loginUser(
         res.status(404).json({ message: 'User not found' });
         return;
       }
-      
+
       bcrypt
         .compare(password, user.password)
         .then((isMatch) => {
@@ -69,10 +77,21 @@ export function loginUser(
             return;
           }
 
-          const payload = { id: user._id };
+          const payload = {
+            id: user._id,
+            username: user.username,
+            email: user.email,
+          };
           const token = jwt.sign(payload, JWT_SECRET);
-          res.cookie('token', token, { httpOnly: true });
-          res.status(200).json({ message: 'User login successfully', user });
+          res.status(200).json({
+            message: 'User login successfully',
+            token,
+            user: {
+              id: user._id,
+              username: user.username,
+              email: user.email,
+            },
+          });
         })
         .catch((err) => {
           res.status(500).json({ error: `Server Error! : ${err}` });
@@ -83,8 +102,8 @@ export function loginUser(
     });
 }
 
-export function logoutUser(_req: Request, res: Response): void {
-  // fixed: call the function
-  res.clearCookie('token', { httpOnly: true });
-  res.status(200).json({ message: 'Logged out successfully' });
-}
+// export function logoutUser(_req: Request, res: Response): void {
+//   // fixed: call the function
+//   res.clearCookie('token', { httpOnly: true });
+//   res.status(200).json({ message: 'Logged out successfully' });
+// }
